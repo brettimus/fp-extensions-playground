@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "bs": {
+      "source": "fiberplane/bs",
+      "sourceType": "github",
+      "computedHash": "40f4f73608b1a966bd604c247d8cbcf5829b601eb8df739ff2940eef9b030373"
+    }
+  }
+}

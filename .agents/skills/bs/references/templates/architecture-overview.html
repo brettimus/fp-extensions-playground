@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API Gateway Architecture — bs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Spline+Sans+Mono:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --neutral-50: oklch(0.985 0 0);
+      --neutral-100: oklch(0.97 0.001 106.4);
+      --neutral-200: oklch(0.922 0.004 106.4);
+      --neutral-300: oklch(0.869 0.005 106.4);
+      --neutral-400: oklch(0.708 0.01 106.4);
+      --neutral-500: oklch(0.556 0.013 106.4);
+      --neutral-600: oklch(0.442 0.014 106.4);
+      --neutral-700: oklch(0.355 0.014 106.4);
+      --neutral-800: oklch(0.269 0.01 106.4);
+      --neutral-900: oklch(0.205 0.008 106.4);
+      --neutral-950: oklch(0.145 0.005 106.4);
+      --primary: oklch(0.565 0.239 263.9);
+      --primary-light: oklch(0.685 0.169 263.9);
+      --primary-subtle: oklch(0.265 0.08 263.9);
+      --accent: #fe7100;
+      --accent-light: #ff8c33;
+      --accent-subtle: oklch(0.285 0.08 55);
+      --success: oklch(0.723 0.191 142.9);
+      --warning: oklch(0.768 0.165 78.5);
+      --danger: oklch(0.637 0.237 25.3);
+      --surface-0: var(--neutral-950);
+      --surface-1: var(--neutral-900);
+      --surface-2: var(--neutral-800);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.15);
+      --text-primary: var(--neutral-100);
+      --text-secondary: var(--neutral-400);
+      --text-muted: var(--neutral-500);
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --hover-row: rgba(255, 255, 255, 0.02);
+      --surface-recessed: var(--neutral-900);
+      --badge-bg-info: var(--primary-subtle);
+      --badge-bg-success: oklch(0.267 0.085 141.7);
+      --badge-bg-warning: oklch(0.267 0.07 78.5);
+      --badge-bg-danger: oklch(0.25 0.08 25.3);
+      --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
+      --font-body: "Spline Sans Mono", "SF Mono", "Cascadia Code", monospace;
+      --font-code: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme]) {
+        --surface-0: var(--neutral-50);
+        --surface-1: var(--neutral-100);
+        --surface-2: var(--neutral-200);
+        --border: rgba(0, 0, 0, 0.08);
+        --border-strong: rgba(0, 0, 0, 0.15);
+        --text-primary: var(--neutral-900);
+        --text-secondary: var(--neutral-600);
+        --text-muted: var(--neutral-500);
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        --hover-row: rgba(0, 0, 0, 0.02);
+        --surface-recessed: var(--neutral-100);
+        --primary-subtle: oklch(0.92 0.04 263.9);
+        --primary-light: oklch(0.45 0.2 263.9);
+        --accent-subtle: oklch(0.92 0.05 55);
+        --badge-bg-info: var(--primary-subtle);
+        --badge-bg-success: oklch(0.92 0.06 142.9);
+        --badge-bg-warning: oklch(0.92 0.05 78.5);
+        --badge-bg-danger: oklch(0.92 0.06 25.3);
+        --success: oklch(0.45 0.15 142.9);
+        --warning: oklch(0.45 0.13 78.5);
+        --danger: oklch(0.45 0.18 25.3);
+      }
+    }
+
+    [data-theme="light"] {
+      --surface-0: var(--neutral-50);
+      --surface-1: var(--neutral-100);
+      --surface-2: var(--neutral-200);
+      --border: rgba(0, 0, 0, 0.08);
+      --border-strong: rgba(0, 0, 0, 0.15);
+      --text-primary: var(--neutral-900);
+      --text-secondary: var(--neutral-600);
+      --text-muted: var(--neutral-500);
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --hover-row: rgba(0, 0, 0, 0.02);
+      --surface-recessed: var(--neutral-100);
+      --primary-subtle: oklch(0.92 0.04 263.9);
+      --primary-light: oklch(0.45 0.2 263.9);
+      --accent-subtle: oklch(0.92 0.05 55);
+      --badge-bg-info: var(--primary-subtle);
+      --badge-bg-success: oklch(0.92 0.06 142.9);
+      --badge-bg-warning: oklch(0.92 0.05 78.5);
+      --badge-bg-danger: oklch(0.92 0.06 25.3);
+      --success: oklch(0.45 0.15 142.9);
+      --warning: oklch(0.45 0.13 78.5);
+      --danger: oklch(0.45 0.18 25.3);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      background: var(--surface-0);
+      color: var(--text-primary);
+      padding: 2rem;
+    }
+
+    main {
+      max-width: 940px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: var(--surface-1);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 3rem 2rem;
+      margin-bottom: 3rem;
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 2.5rem;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 0.9375rem;
+    }
+
+    .meta {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1.25rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    .section {
+      margin-bottom: 3rem;
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 1.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    h3 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-style: italic;
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    p { margin-bottom: 1rem; color: var(--text-secondary); }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.5rem;
+    }
+
+    .card-title {
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-title .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .card p { font-size: 0.8125rem; margin-bottom: 0; }
+
+    .badge {
+      display: inline-block;
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    .badge--success { background: var(--badge-bg-success); color: var(--success); }
+    .badge--warning { background: var(--badge-bg-warning); color: var(--warning); }
+    .badge--danger { background: var(--badge-bg-danger); color: var(--danger); }
+    .badge--info { background: var(--badge-bg-info); color: var(--primary-light); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+
+    th {
+      background: var(--surface-2);
+      font-weight: 600;
+      text-align: left;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-strong);
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    tr:hover td { background: var(--hover-row); }
+
+    .diagram-container {
+      position: relative;
+      margin: 1.5rem 0;
+    }
+
+    .diagram-controls {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      display: flex;
+      gap: 0.25rem;
+      z-index: 1;
+    }
+
+    .diagram-controls button {
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      cursor: pointer;
+    }
+
+    .diagram-controls button:hover {
+      background: var(--surface-1);
+      color: var(--text-primary);
+    }
+
+    .diagram-scroll {
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface-1);
+      padding: 1.5rem;
+    }
+
+    .reference {
+      background: var(--surface-recessed);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .reference h3 {
+      font-style: normal;
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 0.8125rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .reference ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .reference li {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      padding: 0.25rem 0;
+    }
+
+    .reference li::before {
+      content: "→ ";
+      color: var(--accent);
+    }
+
+    code {
+      font-family: var(--font-code);
+      font-size: 0.85em;
+      background: var(--surface-1);
+      padding: 0.125rem 0.375rem;
+      border-radius: 3px;
+    }
+
+    .accent-bar {
+      width: 3rem;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 2px;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .section { animation: fadeUp 0.4s ease-out both; }
+      .section:nth-child(2) { animation-delay: 0.08s; }
+      .section:nth-child(3) { animation-delay: 0.16s; }
+      .section:nth-child(4) { animation-delay: 0.24s; }
+      .section:nth-child(5) { animation-delay: 0.32s; }
+      .section:nth-child(6) { animation-delay: 0.40s; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <h1>API Gateway Architecture</h1>
+      <p class="subtitle">Edge-first request routing with auth, rate limiting, and observability</p>
+      <div class="meta">
+        <span class="meta-item"><span class="badge badge--info">RFC</span></span>
+        <span class="meta-item">v1.0</span>
+        <span class="meta-item">March 2026</span>
+      </div>
+    </header>
+
+    <div class="section">
+      <h2>System Overview</h2>
+      <p>The API gateway sits at the edge, handling authentication, rate limiting, and request routing before traffic reaches backend services. Built on Cloudflare Workers for global low-latency.</p>
+
+      <div class="diagram-container">
+        <div class="diagram-controls">
+          <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+          <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">-</button>
+          <button onclick="resetDiagram(this)" title="Reset">Reset</button>
+        </div>
+        <div class="diagram-scroll">
+          <pre class="mermaid">
+            flowchart TD
+              Client["Client Request"] --> Edge["Edge Worker"]
+              Edge --> Auth["Auth Middleware"]
+              Auth --> RateLimit["Rate Limiter"]
+              RateLimit --> Router["Request Router"]
+              Router --> API["API Service"]
+              Router --> Static["Static Assets"]
+              Router --> WS["WebSocket Handler"]
+              API --> DB[(Postgres)]
+              API --> Cache[(Redis Cache)]
+              WS --> DO["Durable Object"]
+
+              classDef accent stroke:#fe7100,stroke-width:2px
+              class Edge,Router accent
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Core Components</h2>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">
+            <span class="dot" style="background: var(--accent);"></span>
+            Edge Worker
+          </div>
+          <p>Entry point for all requests. Handles TLS termination, geoIP enrichment, and request normalization. Deployed to 300+ edge locations.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <span class="dot" style="background: var(--primary);"></span>
+            Auth Middleware
+          </div>
+          <p>Validates session cookies and Bearer tokens. Resolves user identity from Better Auth sessions. Attaches <code>user_id</code> to request context.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <span class="dot" style="background: var(--warning);"></span>
+            Rate Limiter
+          </div>
+          <p>Token bucket algorithm per user/IP. Backed by Durable Objects for distributed state. Returns <code>429</code> with <code>Retry-After</code> header.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <span class="dot" style="background: var(--success);"></span>
+            Request Router
+          </div>
+          <p>Hono-based routing tree. Matches request path to handler. Supports middleware chains, wildcard routes, and WebSocket upgrades.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Request Lifecycle</h2>
+      <div class="diagram-container">
+        <div class="diagram-controls">
+          <button onclick="zoomDiagram(this, 1.2)">+</button>
+          <button onclick="zoomDiagram(this, 0.8)">-</button>
+          <button onclick="resetDiagram(this)">Reset</button>
+        </div>
+        <div class="diagram-scroll">
+          <pre class="mermaid">
+            sequenceDiagram
+              participant C as Client
+              participant E as Edge Worker
+              participant A as Auth
+              participant R as Rate Limiter
+              participant S as API Service
+              participant D as Database
+
+              C->>E: HTTPS Request
+              E->>E: TLS + Geo enrichment
+              E->>A: Forward with context
+              A->>A: Validate session/token
+              A->>R: Authenticated request
+              R->>R: Check token bucket
+              R->>S: Allowed request
+              S->>D: Query
+              D-->>S: Result
+              S-->>C: JSON Response
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Configuration</h2>
+      <div class="accent-bar"></div>
+
+      <h3>Route definitions</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Path Pattern</th>
+            <th>Handler</th>
+            <th>Auth</th>
+            <th>Rate Limit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/api/v1/*</code></td>
+            <td>API Service</td>
+            <td><span class="badge badge--warning">Required</span></td>
+            <td>100/min</td>
+          </tr>
+          <tr>
+            <td><code>/api/v1/public/*</code></td>
+            <td>API Service</td>
+            <td><span class="badge badge--success">Optional</span></td>
+            <td>30/min</td>
+          </tr>
+          <tr>
+            <td><code>/ws/*</code></td>
+            <td>WebSocket Handler</td>
+            <td><span class="badge badge--warning">Required</span></td>
+            <td>10 conn/user</td>
+          </tr>
+          <tr>
+            <td><code>/assets/*</code></td>
+            <td>Static Assets</td>
+            <td><span class="badge badge--success">None</span></td>
+            <td>None</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Environment bindings</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Binding</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>DB</code></td>
+            <td>Hyperdrive</td>
+            <td>Postgres connection pool</td>
+          </tr>
+          <tr>
+            <td><code>CACHE</code></td>
+            <td>KV Namespace</td>
+            <td>Response cache (60s TTL)</td>
+          </tr>
+          <tr>
+            <td><code>RATE_LIMITER</code></td>
+            <td>Durable Object</td>
+            <td>Distributed rate limit state</td>
+          </tr>
+          <tr>
+            <td><code>AUTH_SECRET</code></td>
+            <td>Secret</td>
+            <td>Session signing key</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Deployment</h2>
+      <div class="accent-bar"></div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">
+            <span class="dot" style="background: var(--success);"></span>
+            Production
+          </div>
+          <p>Auto-deployed from <code>main</code> branch via GitHub Actions. Blue-green deployment with automatic rollback on error rate spike.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <span class="dot" style="background: var(--primary);"></span>
+            Preview
+          </div>
+          <p>Every PR gets a preview deployment at <code>preview-{sha}.workers.dev</code>. Shares production DB (read-only) and KV namespace.</p>
+        </div>
+      </div>
+
+      <div class="reference">
+        <h3>Related Resources</h3>
+        <ul>
+          <li>Cloudflare Workers documentation: workers.cloudflare.dev</li>
+          <li>Hono framework: hono.dev</li>
+          <li>Better Auth session management: better-auth.com</li>
+          <li>Durable Objects: developers.cloudflare.com/durable-objects</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function zoomDiagram(btn, factor) {
+      const container = btn.closest('.diagram-container');
+      const svg = container.querySelector('svg');
+      if (!svg) return;
+      const current = parseFloat(svg.style.transform?.match(/scale\(([^)]+)\)/)?.[1] || '1');
+      const next = Math.min(Math.max(current * factor, 0.3), 3);
+      svg.style.transform = `scale(${next})`;
+      svg.style.transformOrigin = 'top left';
+    }
+    function resetDiagram(btn) {
+      const container = btn.closest('.diagram-container');
+      const svg = container.querySelector('svg');
+      if (svg) svg.style.transform = 'scale(1)';
+    }
+  </script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+    function getThemeVars() {
+      const s = getComputedStyle(document.documentElement);
+      const v = (name, fallback) => s.getPropertyValue(name).trim() || fallback;
+      const isDark = !document.documentElement.hasAttribute('data-theme')
+        ? !window.matchMedia('(prefers-color-scheme: light)').matches
+        : document.documentElement.getAttribute('data-theme') !== 'light';
+      const border = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)';
+      const text = isDark ? v('--text-primary', '#e8e9e6') : v('--text-primary', '#1a1d1e');
+      const surface1 = isDark ? v('--surface-1', '#1a1d1e') : v('--surface-1', '#f5f5f4');
+      const surface2 = isDark ? v('--surface-2', '#242626') : v('--surface-2', '#e8e8e6');
+      return {
+        primaryColor: surface1,
+        primaryTextColor: text,
+        primaryBorderColor: border,
+        lineColor: '#fe7100',
+        secondaryColor: surface2,
+        tertiaryColor: isDark ? v('--surface-0', '#2a2d2e') : v('--surface-0', '#fafaf9'),
+        fontFamily: '"Spline Sans Mono", monospace',
+        fontSize: '13px',
+        // Sequence diagram
+        actorBkg: surface1,
+        actorBorder: border,
+        actorTextColor: text,
+        actorLineColor: border,
+        signalColor: '#fe7100',
+        signalTextColor: text,
+        labelBoxBkgColor: surface2,
+        labelBoxBorderColor: border,
+        labelTextColor: text,
+        loopTextColor: text,
+        noteBkgColor: surface2,
+        noteTextColor: text,
+        noteBorderColor: border,
+        activationBkgColor: isDark ? v('--surface-0', '#2a2d2e') : v('--surface-0', '#fafaf9'),
+        activationBorderColor: border,
+      };
+    }
+
+    // Stash original diagram source before first render (mermaid replaces it with SVG)
+    document.querySelectorAll('.mermaid').forEach(el => {
+      el.setAttribute('data-mermaid-source', el.textContent);
+    });
+
+    let rendering = false;
+    async function initMermaid() {
+      if (rendering) { return; }
+      rendering = true;
+      try {
+        // Restore original source and clear processed state for re-renders
+        document.querySelectorAll('.mermaid').forEach(el => {
+          const src = el.getAttribute('data-mermaid-source');
+          if (src) {
+            el.removeAttribute('data-processed');
+            el.textContent = src;
+          }
+        });
+        mermaid.initialize({ startOnLoad: false, theme: 'base', themeVariables: getThemeVars() });
+        await mermaid.run();
+      } finally {
+        rendering = false;
+      }
+    }
+
+    await initMermaid();
+
+    // Re-render on theme toggle (data-theme attribute change)
+    new MutationObserver(() => initMermaid()).observe(
+      document.documentElement, { attributes: true, attributeFilter: ['data-theme'] }
+    );
+    // Re-render on system preference change
+    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => initMermaid());
+  </script>
+</body>
+</html>
