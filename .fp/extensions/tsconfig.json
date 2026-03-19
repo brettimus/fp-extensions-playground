@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "paths": {
+      "@fiberplane/extensions": [
+        "/home/claude/.fiberplane/extensions/types"
+      ]
+    }
+  },
+  "include": [
+    "*.ts"
+  ]
+}

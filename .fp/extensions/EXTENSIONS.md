@@ -1,0 +1,1 @@
+/home/claude/.fiberplane/extensions/EXTENSIONS.md

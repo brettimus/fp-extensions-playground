@@ -1,0 +1,23 @@
+# fp local data (but keep extensions — they're the point of this repo)
+.fp/*
+!.fp/extensions/
+.fp/extensions/node_modules/
+
+# Node / Bun
+node_modules/
+bun.lockb
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.local
