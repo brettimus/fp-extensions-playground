@@ -1,0 +1,28 @@
+{
+  "name": "fp-extensions-playground",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brettimus/fp-extensions-playground.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/brettimus/fp-extensions-playground/issues"
+  },
+  "homepage": "https://github.com/brettimus/fp-extensions-playground#readme",
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.87",
+    "@openai/codex-sdk": "^0.117.0"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.2"
+  }
+}
